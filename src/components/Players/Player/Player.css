@@ -1,0 +1,8 @@
+.Player {
+    width: 80%;
+    margin: 16px;
+    border: 1px solid darkblue;
+    box-shadow: 0 2px 3px dimgrey;
+    padding: 16px;
+    text-align: left;
+}
