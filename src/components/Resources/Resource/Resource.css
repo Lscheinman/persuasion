@@ -1,0 +1,18 @@
+.Resource {
+    width: 20%;
+    margin: 16px;
+    border: 1px solid darkblue;
+    box-shadow: 0 2px 3px dimgrey;
+    padding: 16px;
+    text-align: center;
+}
+.card {
+    maxWidth: 345;
+    padding: 16px;
+    box-shadow: 0 2px 3px #222222;
+}
+
+.media {
+    height: 0;
+    paddingTop: '56.25%';
+}

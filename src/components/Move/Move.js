@@ -1,12 +1,17 @@
 import React from 'react';
 import MultipleSelect from "../Select/Select";
 import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
+import Slider from '@material-ui/core/Slider';
 /*
-TODO
+The Move Creator provides the form from which all resources, effects, targets (RET) and selected round are entered by the
+player. The form consists of 3 multi-select drop down for each of the RET and a range slider for the round. The slider
+range should always start from the current round and extend 25 rounds out. Therefore rounds in the past can't be selected
+and rounds to far in the future can't be made. Other components will be able to modify the form by adding RET from their
+own menus. For example, the Detail component will allow an RET to be added dependent on the ownership of the RET.
+TODO Move all the onChange functionality to the App and pass down to the Detail
  1) Dropping resources into the Move Creator to give potential moves
- 1b) Option to create move from target or resource
  2) Starting a move from a breadcrumb/progressive menu
- 3) Target Selection
  4) Cost Benefit Analysis
  TODO : Do live view that simulates chart (MPICE stability) based on chosen values Set component state to the current
  stability and then run local calculations that setState of data.
@@ -14,31 +19,14 @@ TODO
 
 export default function Move(props) {
 
-    // TODO child component
-
-    const [selectedResources, setSelectedResources] = React.useState([]);
-    const [selectedTargets, setSelectedTargets] = React.useState([]);
-    const [selectedEffects, setSelectedEffects] = React.useState([]);
-
-    const handleOnChangeResources = (event) => {
-        setSelectedResources(event);
-    };
-
-    const handleOnChangeTargets = (event) => {
-        setSelectedTargets(event);
-    };
-
-    const handleOnChangeEffects = (event) => {
-        setSelectedEffects(event);
-    };
-
     const handleSubmit = () => {
         let moveData = {
-            "targetKeys": selectedTargets.value,
-            "resourceKeys": selectedResources.value,
-            "effectKeys": selectedEffects.value,
+            "targetKeys": props.selectedTargets.value,
+            "resourceKeys": props.selectedResources.value,
+            "effectKeys": props.selectedEffects.value,
             "playerKey": props.playerKey,
-            "gameKey": props.gameKey
+            "gameKey": props.gameKey,
+            "round": props.selectedRound
         };
         console.log(moveData);
         props.createMove(moveData);
@@ -50,15 +38,17 @@ export default function Move(props) {
                 <div>
                     <MultipleSelect
                         names={props.availableResources}
+                        value={props.selectedResources}
                         selectType="Resources"
-                        onChange={handleOnChangeResources}
+                        onChange={props.handleOnChangeResources}
                     />
                 </div>
                 <div>
                     <MultipleSelect
                         names={props.availableTargets}
+                        value={props.selectedTargets}
                         selectType="Targets"
-                        onChange={handleOnChangeTargets}
+                        onChange={props.handleOnChangeTargets}
                     />
                 </div>
 
@@ -67,8 +57,24 @@ export default function Move(props) {
                 <div>
                     <MultipleSelect
                         names={props.availableEffects}
+                        value={props.selectedEffects}
                         selectType="Effects"
-                        onChange={handleOnChangeEffects}
+                        onChange={props.handleOnChangeEffects}
+                    />
+                </div>
+                <div>
+                    <Typography id="discrete-slider" gutterBottom>
+                        Round
+                    </Typography>
+                    <Slider
+                        defaultValue={props.currentRound}
+                        aria-labelledby="discrete-slider"
+                        valueLabelDisplay="auto"
+                        step={1}
+                        marks
+                        min={props.currentRound}
+                        max={props.currentRound + 25}
+                        onChange={props.handleOnChangeRound}
                     />
                 </div>
             </div>

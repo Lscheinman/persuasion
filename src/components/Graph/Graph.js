@@ -1,32 +1,8 @@
 import React from 'react';
 import { Graph } from 'react-d3-graph';
-import Dialog from "@material-ui/core/Dialog";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogActions from "@material-ui/core/DialogActions";
-import Button from "@material-ui/core/Button";
-import {makeStyles} from "@material-ui/core";
-
-const useStyles = makeStyles(theme => ({
-    root: {
-        display: 'flex',
-        flexWrap: 'wrap',
-    },
-    formControl: {
-        margin: theme.spacing(1),
-        minWidth: 120,
-    },
-    selectEmpty: {
-        marginTop: theme.spacing(2),
-    },
-}));
 
 function netgraph(props) {
 // graph payload (with minimalist structure)
-    const [open, setOpen] = React.useState(false);
-    const [nodeDetails, setDetails] = React.useState([]);
-    const [selectedNode, setSelectedNode] = React.useState(null);
     const data = {
         nodes: [{id: "Calvin", data: 5, color: "red"}, {id: "Sally", data: 6}, {id: "Alice", data: 9}],
         links: [{source: "Calvin", target: "Sally"}, {source: "Calvin", target: "Alice"}],
@@ -37,20 +13,10 @@ function netgraph(props) {
     }
 
     const handleClickOpen = (nodeId) => {
-        setSelectedNode(nodeId);
         let details = data.nodes.filter(
             node => node.id == nodeId);
-        let nodeDetails = [];
-        for(let i in details[0]){
-            console.log(i, details[0][i]);
-            nodeDetails.push(<p>{i} : {details[0][i]}</p>);
-        }
-        setDetails(nodeDetails);
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
+        let nodeDict = {...details[0]};
+        props.nodeClicked(nodeDict);
     };
 
 // the graph configuration, you only need to pass down properties
@@ -117,29 +83,6 @@ function netgraph(props) {
                 onMouseOverLink={onMouseOverLink}
                 onMouseOutLink={onMouseOutLink}
             />
-            <Dialog
-                open={open}
-                onClose={handleClose}
-                aria-labelledby="draggable-dialog-title"
-                addResourceToMove={props.addResourceToMove}
-            >
-                <DialogTitle style={{ cursor: 'move' }} id="draggable-dialog-title">
-                    Resource detail
-                </DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        {nodeDetails}
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={props.addResourceToMove} color="primary" value={selectedNode}>
-                        Add to Move
-                    </Button>
-                    <Button onClick={handleClose} color="primary">
-                        Close
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </div>
     )
 }

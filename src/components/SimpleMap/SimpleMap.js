@@ -1,115 +1,50 @@
-import React, { Component } from 'react';
-const d3 = Object.assign({}, require("d3-scale"), require("d3"));
+import React from 'react';
+import {
+    ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Cell
+} from 'recharts';
+import { scaleOrdinal } from 'd3-scale';
+import { schemeCategory10 } from 'd3-scale-chromatic';
 
-const settings = {
-    width: 500,
-    height: 300,
-    padding: 30,
-    numDataPoints: 50,
-    maxRange: () => Math.random() * 1000
-};
+export default function SimpleMap(props)  {
 
-class Axis extends React.Component {
-    componentDidMount() {
-        this.renderAxis();
+    const colors = scaleOrdinal(schemeCategory10).range();
+
+    const handleClickOpen = (nodeId) => {
+        let details = data.filter(
+            node => node.id == nodeId.id);
+        let nodeDict = {...details[0]};
+        props.nodeClicked(nodeDict);
+    };
+    //Demo data can be deleted after proper testing
+    let data = [
+        { xpos: 100, ypos: 200, z: 200 },
+        { xpos: 120, ypos: 100, z: 260 },
+        { xpos: 170, ypos: 300, z: 400 },
+        { xpos: 140, ypos: 250, z: 280 },
+        { xpos: 150, ypos: 400, z: 500 },
+        { xpos: 110, ypos: 280, z: 200 },
+    ];
+    if(props.nodes){
+        data = props.nodes;
     }
 
-    componentDidUpdate() {
-        this.renderAxis();
-    }
-
-    renderAxis() {
-        const node = React.findDOMNode(this.refs.axisContainer);
-        const axis = d3.svg.axis()
-            .orient(this.props.orient)
-            .ticks(5)
-            .scale(this.props.scale);
-
-        d3.select(node).call(axis);
-    }
-
-    render() {
-        return <g className="axis" ref="axisContainer" transform={this.props.translate} />
-    }
+    return (
+        <ScatterChart
+            width={500}
+            height={500}
+            margin={{
+                top: 20, right: 20, bottom: 20, left: 20,
+            }}
+        >
+            <CartesianGrid />
+            <XAxis type="number" dataKey="xpos" name="Latitude" unit="lat" />
+            <YAxis type="number" dataKey="ypos" name="Longitude" unit="lng" />
+            <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+            <Scatter name="A school" data={data} fill="#8884d8" onClick={handleClickOpen}>
+                {
+                    data.map((entry, index) => <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />)
+                }
+            </Scatter>
+        </ScatterChart>
+    );
 }
-
-class XYAxis extends Component {
-    render() {
-        return (
-            <g className="xy-axis">
-                <Axis
-                    translate={`translate(0, ${this.props.height - this.props.padding})`}
-                    scale={this.props.xScale}
-                    orient="bottom"
-                />
-                <Axis
-                    translate={`translate(${this.props.padding}, 0)`}
-                    scale={this.props.xScale}
-                    orient="left"
-                />
-            </g>
-        );
-    }
-}
-
-class DataCircles extends Component {
-    renderCircle(coords) {
-        return (
-            <circle
-                cx={this.props.xScale(coords[0])}
-                cy={this.props.yScale(coords[1])}
-                r={2}
-                key={Math.random() * 1}
-            />
-        );
-    }
-
-    render() {
-        return <g>{this.props.data.map(this.renderCircle.bind(this))}</g>
-    }
-}
-
-class ScatterPlot extends Component {
-
-    componentWillMount() {
-        this.randomizeData();
-    }
-
-    randomizeData() {
-        const randomData = d3.range(settings.numDataPoints).map(() => {
-            return [Math.floor(Math.random() * settings.maxRange()), Math.floor(Math.random() * settings.maxRange())];
-        });
-        this.setState({data: randomData});
-    }
-
-    getXScale() {
-        const xMax = d3.max(this.props.data, (d) => d[0]);
-
-        return d3.scale.linear()
-            .domain([0, xMax])
-            .range([this.props.padding, (this.props.width - this.props.padding * 2)]);
-    }
-
-    getYScale() {
-        const yMax = d3.max(this.props.data, (d) => d[1]);
-
-        return d3.scale.linear()
-            .domain([0, yMax])
-            .range([this.props.height - this.props.padding, this.props.padding]);
-    }
-
-    render() {
-        const xScale = this.getXScale();
-        const yScale = this.getYScale();
-
-        return (
-            <svg width={this.props.width} height={this.props.height}>
-                <DataCircles xScale={xScale} yScale={yScale} {...this.props} />
-                <XYAxis xScale={xScale} yScale={yScale} {...this.props} />
-            </svg>
-        );
-    }
-}
-
-export default ScatterPlot;
-  

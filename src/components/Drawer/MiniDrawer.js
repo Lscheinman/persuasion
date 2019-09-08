@@ -20,6 +20,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import logo from "../../logo.svg";
 import ViewResourceIcon from "@material-ui/icons/Widgets";
+import ViewDetailIcon from "@material-ui/icons/ZoomIn";
 import AddResourceIcon from "@material-ui/icons/Add";
 import StabilityIcon from "@material-ui/icons/ShowChartRounded";
 import Grid from '@material-ui/core/Grid';
@@ -218,6 +219,12 @@ export default function MiniDrawer(props) {
                         </ListItemIcon>
                         <ListItemText primary="Resources" />
                     </ListItem>
+                    <ListItem button key="ViewDetailIcon">
+                        <ListItemIcon>
+                            <ViewDetailIcon onClick={props.toggleDetailCard}/>
+                        </ListItemIcon>
+                        <ListItemText primary="Detail" />
+                    </ListItem>
                     <ListItem button key="addResourceButton">
                         <ListItemIcon>
                             <AddResourceIcon onClick={props.toggleCard}/>
@@ -230,10 +237,12 @@ export default function MiniDrawer(props) {
                 <div className={classes.toolbar} />
                 <Grid container spacing={3}>
                     {props.stabilityDiv}
-                    {props.playersDiv}
                     {props.movesDiv}
-                    {props.worldMap}
+                    {props.detailDiv}
+                    {props.simpleMap}
                     {props.graphDiv}
+                    {props.playersDiv}
+                    {props.worldMap}
                 </Grid>
             </main>
         </div>

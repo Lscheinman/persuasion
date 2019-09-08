@@ -21,6 +21,7 @@ import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import PropTypes from 'prop-types';
 
+
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
 
@@ -111,6 +112,44 @@ export default function GridCard(props) {
             <ShareIcon/>
         </IconButton>
     );
+    let collapse = (
+        <Collapse in={expanded} timeout="auto" unmountOnExit>
+            <CardContent>
+                <Tabs value={value} onChange={handleChange} aria-label="wrapped label tabs example">
+                    <Tab
+                        value="one"
+                        label="Stability"
+                        wrapped
+                        {...a11yProps('one')}
+                    />
+                    <Tab value="two" label="Map" {...a11yProps('two')} />
+                    <Tab value="three" label="Links" {...a11yProps('three')} />
+                    <Tab value="four" label="Detail" {...a11yProps('four')} />
+                </Tabs>
+                <TabPanel value={value} index="one">
+                    Experimental stability
+                    {analysisContent}
+                </TabPanel>
+                <TabPanel value={value} index="two">
+                    TODO A Map of the selected items
+                </TabPanel>
+                <TabPanel value={value} index="three">
+                    TODO Focused network diagram
+                </TabPanel>
+                <TabPanel value={value} index="three">
+                    TODO Detail of any one selected item
+                </TabPanel>
+            </CardContent>
+        </Collapse>
+    );
+    if(props.title === 'Effect' || props.title === 'Resource'){
+        actionOne = (
+            <IconButton aria-label="share" onClick={handleOpenClick}>
+                <PlayIcon/>
+            </IconButton>
+        )
+        collapse = null;
+    }
     if(props.createMove){
         actionOne = (
             <IconButton aria-label="share" onClick={handleOpenClick}>
@@ -163,34 +202,7 @@ export default function GridCard(props) {
                     <ExpandMoreIcon />
                 </IconButton>
             </CardActions>
-            <Collapse in={expanded} timeout="auto" unmountOnExit>
-                <CardContent>
-                    <Tabs value={value} onChange={handleChange} aria-label="wrapped label tabs example">
-                        <Tab
-                            value="one"
-                            label="Stability"
-                            wrapped
-                            {...a11yProps('one')}
-                        />
-                        <Tab value="two" label="Map" {...a11yProps('two')} />
-                        <Tab value="three" label="Links" {...a11yProps('three')} />
-                        <Tab value="four" label="Detail" {...a11yProps('four')} />
-                    </Tabs>
-                    <TabPanel value={value} index="one">
-                        Experimental stability
-                        {analysisContent}
-                    </TabPanel>
-                    <TabPanel value={value} index="two">
-                       TODO A Map of the selected items
-                    </TabPanel>
-                    <TabPanel value={value} index="three">
-                        TODO Focused network diagram
-                    </TabPanel>
-                    <TabPanel value={value} index="three">
-                        TODO Detail of any one selected item
-                    </TabPanel>
-                </CardContent>
-            </Collapse>
+            {collapse}
         </Card>
     );
 }

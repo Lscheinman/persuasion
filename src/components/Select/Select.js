@@ -42,32 +42,21 @@ const MenuProps = {
 };
 export default function MultipleSelect(props) {
     const classes = useStyles();
-    const [selectedKeys, setSelectedKey] = React.useState([]);
-    let names = [];
-    if ( props.names ){
-        names = props.names;
-    }
-
-    function handleChange(event) {
-        setSelectedKey(event.target.value);
-        props.onChange(event.target);
-    }
-
     return (
         <div className={classes.root}>
             <FormControl className={classes.formControl}>
                 <InputLabel htmlFor="select-multiple-checkbox">{props.selectType}</InputLabel>
                 <Select
                     multiple
-                    value={selectedKeys}
-                    onChange={handleChange}
+                    value={props.value}
+                    onChange={props.onChange}
                     input={<Input id="select-multiple-checkbox" />}
                     renderValue={selected => selected.join(', ')}
                     MenuProps={MenuProps}
                 >
-                    {names.map(name => (
+                    {props.names.map(name => (
                         <MenuItem key={name.id} value={name.id}>
-                            <Checkbox checked={selectedKeys.indexOf(name.id) > -1} />
+                            <Checkbox checked={props.value.indexOf(name.id) > -1} />
                             <ListItemText primary={name.name} />
                         </MenuItem>
                     ))}
