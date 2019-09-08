@@ -1,3 +1,8 @@
+## Game Setup
+Uses PM2 to manage deployment on port 3000
+http://pm2.keymetrics.io/docs/usage/process-management/
+
+
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>
