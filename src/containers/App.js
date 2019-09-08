@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import './App.css';
 import Popup from '../components/Popup/Popup';
 import axios from 'axios'
-// TODO Get rid of Cockpit folder moving everything to MiniDrawer
 import Players from '../components/Players/Players';
 import Graph from '../components/Graph/Graph';
 import worlddata from '../components/WorldMap/world';
@@ -13,6 +12,7 @@ import { range } from 'd3-array';
 import { scaleThreshold } from 'd3-scale'
 import Move from '../components/Move/Move';
 import Card from "../components/Drawer/Card";
+import Detail from "../components/Detail/Detail";
 import Grid from "@material-ui/core/Grid";
 import Snackbar from '../components/SnackBar/SnackBar'
 import CreateGamePopUp from '../components/CreateGame/CreateGamePopUp'
@@ -21,7 +21,8 @@ import Stability from '../components/Stability/Stability'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core';
 import PrimaryColor from '@material-ui/core/colors/grey';
 import SecondaryColor from '@material-ui/core/colors/amber';
-import Spinner from '../components/Drawer/Spinner'
+import Spinner from '../components/Drawer/Spinner';
+import SimpleMap from "../components/SimpleMap/SimpleMap";
 
 const appdata = worlddata.features
     .filter(d => geoCentroid(d)[0] < -20);
@@ -60,8 +61,8 @@ class App extends Component {
         playerCount: 5,
         players: DemoGame.gameState.players,
         resources: DemoGame.gameState.nodes,
+        selectedNode: DemoGame.gameState.nodes[5],
         selectedGame: DemoGame.gameState.gameName,
-        selectedResources: [],
         userType: "Master",
         screenWidth: 1000,
         screenHeight: 500,
@@ -75,14 +76,20 @@ class App extends Component {
         popUp: '234980d',
         showPlayerCard: false,
         showMapCard: false,
+        showSimpleMapCard: false,
         showNetworkCard: false,
         showMoveCard: false,
+        showDetailCard: false,
         showResourceCard: false,
         showStabilityCard: false,
         showResourcePopUp: null,
         snackBarOpen: true,
         snackBarMessage: "Latest message",
-        stabilityView: {}
+        stabilityView: {},
+        selectedMoveRound: null,
+        selectedMoveResources: [],
+        selectedMoveTargets: [],
+        selectedMoveEffects: []
     };
 
     onResize() {
@@ -97,19 +104,83 @@ class App extends Component {
         this.setState({ brushExtent: d })
     };
 
-    addResourceToMove(nodeId){
-        console.log("Current move resources:" + this.state.selectedResources);
-        nodeId = nodeId.currentTarget.value;
-        let newresources = [...this.state.selectedResources];
-        newresources.push(nodeId);
-        this.setState({selectedResources: newresources});
-        this.state.snackBarMessage = (nodeId + " added to move");
-        this.state.snackBarOpen = true;
-    };
-
     setGames = (availableGames) => {
         console.log("[app.js] Set Game: " + availableGames);
         this.setState({availableGames : availableGames});
+    };
+
+    handleOnChangeRound = (event, value) => {
+        this.setState( { selectedMoveRound : value});
+        console.log("Selected Round " + value);
+    };
+
+    // Helper function for handling different methods of adding
+    getSelectedKey = (event, value) => {
+        let selectedKey = null;
+        if(value) {
+            selectedKey = Number(value.key);
+        } else if(event.id) {
+            selectedKey = event.id;
+        }
+        let selectedNode = this.state.currentGame.nodes.filter(function (node) {
+            return node.id === selectedKey;
+        });
+        this.setState({ selectedNode: selectedNode[0]});
+        this.setState({showDetailCard: true});
+        return selectedKey;
+    } ;
+
+    handleOnChangeResources = (event, value) => {
+        let selectedKey = this.getSelectedKey(event, value);
+        let selectedMoveResources = [...this.state.selectedMoveResources];
+        if (selectedMoveResources.includes(selectedKey)) {
+            let newSelectedMoveResources = selectedMoveResources.filter(function (value) {
+                return value !== selectedKey;
+            });
+            this.setState({selectedMoveResources: newSelectedMoveResources});
+            this.setState({snackBarMessage: "Removed " + selectedKey});
+        } else {
+            selectedMoveResources.push(selectedKey);
+            this.setState({selectedMoveResources: selectedMoveResources});
+            this.setState({snackBarMessage: "Added " + selectedKey});
+        }
+    };
+
+    handleOnChangeTargets = (event, value) => {
+        let selectedKey = this.getSelectedKey(event, value);
+        let selectedMoveTargets = [...this.state.selectedMoveTargets];
+        if (selectedMoveTargets.includes(selectedKey)) {
+            let newSelectedMoveTargets = selectedMoveTargets.filter(function (value) {
+                return value !== selectedKey;
+            });
+            this.setState({selectedMoveTargets: newSelectedMoveTargets});
+            this.setState({snackBarMessage: "Removed " + selectedKey});
+        } else {
+            selectedMoveTargets.push(selectedKey);
+            this.setState({selectedMoveTargets: selectedMoveTargets});
+            this.setState({snackBarMessage: "Added " + selectedKey});
+        }
+
+    };
+
+    handleOnChangeEffects = (event, value) => {
+        let selectedKey = this.getSelectedKey(event, value);
+        if((event.id && event.player === this.state.currentPlayer) || (value)) {
+            let selectedMoveEffects = [...this.state.selectedMoveEffects];
+            if (selectedMoveEffects.includes(selectedKey)) {
+                let newSelectedMoveEffects = selectedMoveEffects.filter(function (value) {
+                    return value !== selectedKey;
+                });
+                this.setState({selectedMoveEffects: newSelectedMoveEffects});
+                this.setState({snackBarMessage: "Removed " + selectedKey});
+            } else {
+                selectedMoveEffects.push(selectedKey);
+                this.setState({selectedMoveEffects: selectedMoveEffects});
+                this.setState({snackBarMessage: "Added " + selectedKey});
+            }
+        } else if(event.id && event.player !== this.state.currentPlayer){
+            this.setState({snackBarMessage: this.state.currentPlayer + " can't add effects from " + event.player});
+        }
     };
 
     setViews = () => {
@@ -225,11 +296,22 @@ class App extends Component {
     toggleMapCard = () => {
         const doesShow = this.state.showMapCard;
         this.setState({ showMapCard: !doesShow });
+        this.toggleSimpleMapCard();
+    };
+
+    toggleSimpleMapCard = () => {
+        const doesShow = this.state.showSimpleMapCard;
+        this.setState({ showSimpleMapCard: !doesShow });
     };
 
     toggleMoveCard = () => {
         const doesShow = this.state.showMoveCard;
         this.setState({ showMoveCard: !doesShow });
+    };
+
+    toggleDetailCard = () => {
+        const doesShow = this.state.showDetailCard;
+        this.setState({ showDetailCard: !doesShow });
     };
 
     toggleStabilityCard = () => {
@@ -276,6 +358,10 @@ class App extends Component {
 
     togglePlayerResources = (event) => {
         this.setState({currentPlayer : event.currentTarget.value});
+        this.setState({selectedMoveRound: null});
+        this.setState({selectedMoveResources: []});
+        this.setState({selectedMoveTargets: []});
+        this.setState({selectedMoveEffects: []});
     };
 
     togglePopup = () => {
@@ -315,7 +401,36 @@ class App extends Component {
         }
         const filteredAppdata = appdata
             .filter((d,i) => d.launchday >= this.state.brushExtent[0] && d.launchday <= this.state.brushExtent[1]);
+        const createGamePopUp = (
+            <CreateGamePopUp
+                availableGames={this.state.availableGames}
+                selected={(event) => this.gameSelectHandler(event)}
+                deleted={(event) => this.deleteGameHandler(event)}
+                create={(event) => this.setupGame(event)}
+            />
+        );
         //Game Map Card
+        let SimpleMapDiv = null;
+        if ( this.state.showSimpleMapCard ) {
+            const SimpleMapContent = (
+                <SimpleMap
+                    selectedNode={this.state.selectedNode}
+                    nodes={this.state.currentGame.nodes}
+                    nodeClicked={( event, value) => this.getSelectedKey(event, value)}
+                />
+            );
+            SimpleMapDiv = (
+                <Grid item>
+                    <Card
+                        content={SimpleMapContent}
+                        avatar="S"
+                        title="Simple Map"
+                        subheader="Common Operating Picture"
+                    />
+                </Grid>
+            );
+        }
+
         let WorldMapDiv = null;
         if ( this.state.showMapCard ) {
             const WorldMapContent = (
@@ -326,7 +441,6 @@ class App extends Component {
                     colorScale={colorScale}
                     size={[this.state.screenWidth / 2, this.state.screenHeight / 2]}/>
             );
-
             WorldMapDiv = (
                 <Grid item>
                     <Card
@@ -341,7 +455,6 @@ class App extends Component {
         //Card to view each player individually
         let PlayersDiv = null;
         if ( this.state.showPlayerCard ) {
-            const spinner = (<Spinner/>);
             const PlayersContent = (
                 <Players
                     players={this.state.players}
@@ -367,6 +480,7 @@ class App extends Component {
                     nodes={this.state.currentGame.nodes}
                     links={this.state.currentGame.links}
                     changed={() => this.nameChangedHandler}
+                    nodeClicked={( event, value) => this.getSelectedKey(event, value)}
                     addResourceToMove={(event, nodeId) => this.addResourceToMove(event, nodeId)}
                 />
             );
@@ -386,7 +500,6 @@ class App extends Component {
         if ( this.state.showMoveCard ) {
             const MovesContent = (
                 <Move
-                    selectedResources={this.state.selectedResources}
                     availableResources={this.state.currentGame.nodes.filter(resource => {
                         return (resource.player === this.state.currentPlayer && resource.class_name === "Resource")
                     })}
@@ -399,9 +512,16 @@ class App extends Component {
                     gameKey={this.state.currentGame.key}
                     playerKey={this.state.currentPlayer}
                     createMove={(moveData) => this.createMove(moveData)}
+                    currentRound={this.state.currentGame.current_round}
+                    handleOnChangeRound={(event, value) => this.handleOnChangeRound(event, value)}
+                    handleOnChangeResources={(event, value) => this.handleOnChangeResources(event, value)}
+                    handleOnChangeTargets={(event, value) => this.handleOnChangeTargets(event, value)}
+                    handleOnChangeEffects={(event, value) => this.handleOnChangeEffects(event, value)}
+                    selectedResources={this.state.selectedMoveResources}
+                    selectedTargets={this.state.selectedMoveTargets}
+                    selectedEffects={this.state.selectedMoveEffects}
                 />
             );
-            // TODO Card content to be tabs
             MovesDiv = (
                 <Grid item width="100%">
                     <Card
@@ -415,18 +535,32 @@ class App extends Component {
                 </Grid>
             );
         }
-        const createGamePopUp = (
-            <CreateGamePopUp
-                availableGames={this.state.availableGames}
-                selected={(event) => this.gameSelectHandler(event)}
-                deleted={(event) => this.deleteGameHandler(event)}
-                create={(event) => this.setupGame(event)}
-            />
-        );
+        // Detail of selected Single Item
+        let DetailDiv = null;
+        if ( this.state.showDetailCard ){
+            const DetailContent = (
+                <Detail
+                    selectedNode={this.state.selectedNode}
+                    currentPlayer={this.state.currentPlayer}
+                    handleOnChangeResources={(event) => this.handleOnChangeResources(event)}
+                    handleOnChangeTargets={(event) => this.handleOnChangeTargets(event)}
+                    handleOnChangeEffects={(event) => this.handleOnChangeEffects(event)}
+                />
+            );
+            DetailDiv = (
+                <Grid item>
+                    <Card
+                        content={DetailContent}
+                        avatar={this.state.selectedNode.id}
+                        title={this.state.selectedNode.class_name}
+                        subheader={this.state.selectedNode.player}
+                    />
+                </Grid>
+            );
+        }
         // Overall Game state in metrics where players are measured on proximity to effect priority score
         let StabilityDiv = null;
         if ( this.state.showStabilityCard ) {
-
             const stabilityContent = (
                 <Stability
                     stabilityView={this.state.stabilityView}
@@ -453,7 +587,6 @@ class App extends Component {
                 />
             )
         }
-
         let spinner = null;
         if ( this.state.showSpinner ) {
             spinner = <Spinner/>
@@ -473,17 +606,21 @@ class App extends Component {
                         currentPlayer={this.state.currentPlayer}
                         userType={this.state.userType}
                         worldMap={WorldMapDiv}
+                        simpleMap={SimpleMapDiv}
                         playersDiv={PlayersDiv}
                         graphDiv={GraphDiv}
                         movesDiv={MovesDiv}
+                        detailDiv={DetailDiv}
                         stabilityDiv={StabilityDiv}
                         createGame={createGamePopUp}
                         togglePlayerCard={this.togglePlayerCard}
                         toggleResourceCard={this.toggleResourceCard}
                         toggleMoveCard={this.toggleMoveCard}
                         toggleMapCard={this.toggleMapCard}
+                        toggleSimpleMapCard={this.toggleSimpleMapCard}
                         toggleNetworkCard={this.toggleNetworkCard}
                         toggleStabilityCard={this.toggleStabilityCard}
+                        toggleDetailCard={this.toggleDetailCard}
                     />
                 </div>
                 {popup}
