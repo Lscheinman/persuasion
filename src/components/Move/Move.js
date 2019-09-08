@@ -18,6 +18,12 @@ TODO Move all the onChange functionality to the App and pass down to the Detail
  */
 
 export default function Move(props) {
+    let currentRound = null;
+    if(props.current_round){
+        currentRound = props.current_round;
+    } else {
+        currentRound = 0;
+    }
 
     const handleSubmit = () => {
         let moveData = {
@@ -67,13 +73,13 @@ export default function Move(props) {
                         Round
                     </Typography>
                     <Slider
-                        defaultValue={props.currentRound}
+                        defaultValue={currentRound}
                         aria-labelledby="discrete-slider"
                         valueLabelDisplay="auto"
                         step={1}
                         marks
-                        min={props.currentRound}
-                        max={props.currentRound + 25}
+                        min={currentRound}
+                        max={currentRound + 25}
                         onChange={props.handleOnChangeRound}
                     />
                 </div>
